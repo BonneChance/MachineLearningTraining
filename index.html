@@ -1,0 +1,307 @@
+
+<!DOCTYPE html>
+<html class='v2' dir='ltr'>
+<head>
+<title>PREDICTING THE MANNER OF MAKING EXRECISES</title>
+</head>
+<body>
+<div dir="ltr" style="text-align: left;" trbidi="on">
+<div dir="ltr" style="text-align: left;" trbidi="on">
+<div dir="ltr" style="text-align: left;" trbidi="on">
+<div dir="ltr" style="text-align: left;" trbidi="on">
+<div dir="ltr" style="text-align: left;" trbidi="on">
+<div dir="ltr" style="text-align: left;" trbidi="on">
+<div style="text-align: center;">
+<b>PREDICTING THE MANNER OF MAKING EXRECISES</b></div>
+<div style="text-align: center;">
+<b><br /></b></div>
+<div style="text-align: left;">
+Data for this task was taken from the following source:&nbsp;<span style="background-color: white; color: #333333; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; line-height: 21px;">&nbsp;</span><a href="http://groupware.les.inf.puc-rio.br/har" style="background-color: white; box-sizing: border-box; color: #0367b0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px; line-height: 21px; text-decoration: none;">http://groupware.les.inf.puc-rio.br/har</a></div>
+<div style="text-align: left;">
+Authors propose a dataset, that has been collected from on-body sensors. Data is divided (labeled) 5 classes (sitting-down, standing-up, standing, walking, and sitting). It was collected on 8 hours of activities of 4 healthy subjects.<br />
+The task is to predict the manner in which people did the exercise based on the data from sensors.<br />
+<br /></div>
+<pre style="background-color: #eeeeee; border: 1px dashed #999999; color: black; font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; font-size: 12px; line-height: 14px; overflow: auto; padding: 5px; width: 100%;"><code>dataTraining = read.csv('pml-training.csv') 
+str(<span style="font-family: 'Andale Mono', 'Lucida Console', Monaco, fixed, monospace;">dataTraining</span><span style="font-family: 'Andale Mono', 'Lucida Console', Monaco, fixed, monospace;">)</span>
+names(</code>dataTraining)</pre>
+<br /></div>
+<pre><code>'data.frame':   19622 obs. of  160 variables:
+ $ X                       : int  1 2 3 4 5 6 7 8 9 10 ...
+ $ user_name               : Factor w/ 6 levels "adelmo","carlitos",..: 2 2 2 2 2 2 2 2 2 2 ...
+ $ raw_timestamp_part_1    : int  1323084231 1323084231 1323084231 1323084232 1323084232 1323084232 1323084232 1323084232 1323084232 1323084232 ...
+ $ raw_timestamp_part_2    : int  788290 808298 820366 120339 196328 304277 368296 440390 484323 484434 ...
+ $ cvtd_timestamp          : Factor w/ 20 levels "02/12/2011 13:32",..: 9 9 9 9 9 9 9 9 9 9 ...
+ $ new_window              : Factor w/ 2 levels "no","yes": 1 1 1 1 1 1 1 1 1 1 ...
+ $ num_window              : int  11 11 11 12 12 12 12 12 12 12 ...
+ $ roll_belt               : num  1.41 1.41 1.42 1.48 1.48 1.45 1.42 1.42 1.43 1.45 ...
+ $ pitch_belt              : num  8.07 8.07 8.07 8.05 8.07 8.06 8.09 8.13 8.16 8.17 ...
+ $ yaw_belt                : num  -94.4 -94.4 -94.4 -94.4 -94.4 -94.4 -94.4 -94.4 -94.4 -94.4 ...
+ $ total_accel_belt        : int  3 3 3 3 3 3 3 3 3 3 ...
+ $ kurtosis_roll_belt      : Factor w/ 397 levels "","-0.016850",..: 1 1 1 1 1 1 1 1 1 1 ...
+ $ kurtosis_picth_belt     : Factor w/ 317 levels "","-0.021887",..: 1 1 1 1 1 1 1 1 1 1 ...
+ $ kurtosis_yaw_belt       : Factor w/ 2 levels "","#DIV/0!": 1 1 1 1 1 1 1 1 1 1 ...
+ $ skewness_roll_belt      : Factor w/ 395 levels "","-0.003095",..: 1 1 1 1 1 1 1 1 1 1 ...
+ $ skewness_roll_belt.1    : Factor w/ 338 levels "","-0.005928",..: 1 1 1 1 1 1 1 1 1 1 ...
+ $ skewness_yaw_belt       : Factor w/ 2 levels "","#DIV/0!": 1 1 1 1 1 1 1 1 1 1 ...
+ $ max_roll_belt           : num  NA NA NA NA NA NA NA NA NA NA ...
+ $ max_picth_belt          : int  NA NA NA NA NA NA NA NA NA NA ...
+ $ max_yaw_belt            : Factor w/ 68 levels "","-0.1","-0.2",..: 1 1 1 1 1 1 1 1 1 1 ...
+ $ min_roll_belt           : num  NA NA NA NA NA NA NA NA NA NA ...
+ $ min_pitch_belt          : int  NA NA NA NA NA NA NA NA NA NA ...
+ $ min_yaw_belt            : Factor w/ 68 levels "","-0.1","-0.2",..: 1 1 1 1 1 1 1 1 1 1 ...
+ $ amplitude_roll_belt     : num  NA NA NA NA NA NA NA NA NA NA ...
+ $ amplitude_pitch_belt    : int  NA NA NA NA NA NA NA NA NA NA ...
+ $ amplitude_yaw_belt      : Factor w/ 4 levels "","#DIV/0!","0.00",..: 1 1 1 1 1 1 1 1 1 1 ...
+ $ var_total_accel_belt    : num  NA NA NA NA NA NA NA NA NA NA ...
+</code></pre>
+<br />
+We have 158 observable variables, 19622 rows. The first noticable thing is that the data is messy. Both NA values, factor levels trated as not factir and vice versa, "#DIV/0!".<br />
+So we'll start with features exploration.<br />
+After looking on data let's start with these variables, these data definetly came from Angular Rate Gyro Sensors:<br />
+<br />
+Let's create subset of these variables.<br />
+<br /></div>
+<pre style="background-color: #eeeeee; border: 1px dashed #999999; color: black; font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; font-size: 12px; line-height: 14px; overflow: auto; padding: 5px; width: 100%;"><code>dataTraining = data.frame(
+dataTraining$roll_belt, 
+dataTraining$pitch_belt, 
+dataTraining$yaw_belt, 
+dataTraining$gyros_belt_x,
+dataTraining$gyros_belt_y, 
+dataTraining$gyros_belt_z, 
+dataTraining$accel_belt_x,
+dataTraining$accel_belt_y, 
+dataTraining$accel_belt_z,
+dataTraining$magnet_belt_x,
+dataTraining$magnet_belt_y, 
+dataTraining$magnet_belt_z,
+dataTraining$roll_dumbbell, 
+dataTraining$pitch_dumbbell, 
+dataTraining$yaw_dumbbell, 
+dataTraining$gyros_dumbbell_x, 
+dataTraining$gyros_dumbbell_y, 
+dataTraining$gyros_dumbbell_z, 
+dataTraining$accel_dumbbell_x, 
+dataTraining$accel_dumbbell_y, 
+dataTraining$accel_dumbbell_z, 
+dataTraining$magnet_dumbbell_x, 
+dataTraining$magnet_dumbbell_y, 
+dataTraining$magnet_dumbbell_z, 
+dataTraining$roll_arm, 
+dataTraining$pitch_arm, 
+dataTraining$yaw_arm, 
+dataTraining$gyros_arm_x , 
+dataTraining$gyros_arm_y, 
+dataTraining$accel_arm_x, 
+dataTraining$accel_arm_y, 
+dataTraining$accel_arm_z, 
+dataTraining$magnet_arm_x, 
+dataTraining$magnet_arm_y, 
+dataTraining$magnet_arm_z, 
+dataTraining$roll_forearm, 
+dataTraining$pitch_forearm, 
+dataTraining$yaw_forearm,
+dataTraining$accel_forearm_x,
+dataTraining$accel_forearm_y,
+dataTraining$accel_forearm_z,
+dataTraining$magnet_forearm_x,
+dataTraining$magnet_forearm_y,
+dataTraining$magnet_forearm_z,
+dataTraining$classe)
+</code></pre>
+</div>
+<br />
+Next step is to remove cases that have high correlation. 
+
+<br />
+<br />
+<pre style="background-color: #eeeeee; border: 1px dashed #999999; color: black; font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; font-size: 12px; line-height: 14px; overflow: auto; padding: 5px; width: 100%;"><code>corrMatrix &lt;- cor(na.omit(dataTraining[sapply(dataTraining, is.numeric)]))<!-----></code></pre>
+<br />
+dataTraining.yaw_belt -&gt; &nbsp;dataTraining.roll_belt -&gt;&nbsp;&nbsp;0.815229714<br />
+dataTraining.accel_belt_y -&gt; dataTraining.roll_belt -&gt; &nbsp;0.924898266<br />
+dataTraining.accel_belt_z - &gt; dataTraining.roll_belt -&gt;&nbsp;&nbsp;-0.992008513<br />
+dataTraining.accel_arm_y -&gt; dataTraining.roll_belt -&gt;&nbsp;&nbsp;-0.794780699<br />
+dataTraining.pitch_belt - &gt;&nbsp;dataTraining.accel_belt_x - &gt;&nbsp;&nbsp;-0.965733397<br />
+<div>
+dataTraining.magnet_belt_x -&gt;&nbsp;dataTraining.pitch_belt -&gt; -0.884172747</div>
+<div>
+<div>
+dataTraining.accel_belt_x -&gt;&nbsp;dataTraining.pitch_belt -&gt;&nbsp;&nbsp;-0.96573340</div>
+</div>
+<div>
+dataTraining.magnet_belt_x &nbsp;-&gt;&nbsp;&nbsp;dataTraining.accel_belt_x -&gt; 0.89209128</div>
+<div>
+dataTraining.accel_belt_z &nbsp;-&gt; &nbsp;dataTraining.accel_belt_y -&gt;&nbsp;&nbsp;-0.93338541</div>
+<div>
+dataTraining.accel_dumbbell_x -&gt;&nbsp;dataTraining.pitch_dumbbell -&gt;&nbsp;0.808288507</div>
+<div>
+dataTraining.gyros_dumbbell_z &nbsp;-&gt;&nbsp;dataTraining.gyros_dumbbell_x -&gt;&nbsp;-0.978950698</div>
+<div>
+<br /></div>
+<div>
+So we are removing highly corellated variables:<br />
+<br /></div>
+<div>
+<pre class="lang-r prettyprint prettyprinted" style="background-color: #eeeeee; border: 0px; margin-bottom: 1em; max-height: 600px; overflow: auto; padding: 5px; width: auto; word-wrap: normal;"><span style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace;"><span style="font-size: 12px; line-height: 14px;">dataTraining$dataTraining.yaw_belt &lt;- NULL 
+dataTraining$dataTraining.accel_belt_z &lt;- NULL 
+dataTraining$dataTraining.accel_arm_y &lt;- NULL 
+dataTraining$dataTraining.accel_belt_z &lt;- NULL 
+dataTraining$dataTraining.accel_arm_y &lt;- NULL 
+dataTraining$dataTraining.pitch_belt &lt;- NULL 
+dataTraining$dataTraining.magnet_belt_x &lt;- NULL 
+dataTraining$dataTraining.accel_dumbbell_x &lt;- NULL 
+dataTraining$dataTraining.gyros_dumbbell_z &lt;- NULL </span></span></pre>
+</div>
+Now, after we've removed high corellated variables, we can split the data into training, test and validation set and perform the prediction.<br />
+<br />
+<pre class="lang-r prettyprint prettyprinted" style="background-color: #eeeeee; border: 0px; margin-bottom: 1em; max-height: 600px; overflow: auto; padding: 5px; width: auto; word-wrap: normal;"><div dir="ltr" style="font-family: 'Times New Roman'; white-space: normal;" trbidi="on">
+<pre style="background-color: #eeeeee; border: 1px dashed rgb(153, 153, 153); overflow: auto; padding: 5px; width: 100%;"><span style="font-size: 12px; line-height: 14px;">library(caret)
+inBuild&lt;- createDataPartition(y = dataTraining$dataTraining.classe, p=0.7, list = FALSE)
+validation &lt;- dataTraining[-inBuild,]
+buildData&lt;-dataTraining[inBuild,]
+inTrain&lt;-createDataPartition(y = buildData$dataTraining.classe, p=0.7, list = FALSE)
+training&lt;-buildData[inTrain,]
+test&lt;-buildData[-inTrain,]</span><span style="font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace;"><span style="font-size: 12px; line-height: 14px;">
+</span></span></pre>
+<pre style="background-color: #eeeeee; border: 1px dashed rgb(153, 153, 153); overflow: auto; padding: 5px; width: 100%;"><span style="font-size: 12px; line-height: 14px;">
+</span></pre>
+<pre style="background-color: #eeeeee; border: 1px dashed rgb(153, 153, 153); overflow: auto; padding: 5px; width: 100%;"><span style="font-size: 12px; line-height: 14px;"><div dir="ltr" style="font-family: 'Times New Roman'; font-size: medium; line-height: normal; white-space: normal;" trbidi="on">
+<div dir="ltr" trbidi="on">
+<pre style="background-color: #eeeeee; border: 1px dashed rgb(153, 153, 153); overflow: auto; padding: 5px; width: 100%;">mod1&lt;-train(dataTraining.classe~.,method="rf",data=training)
+
+predTrain&lt;-predict(mod1, training)
+predTest&lt;-predict(mod1, test)
+confusionMatrix(predTest, test$dataTraining.classe)
+
+validationTest&lt;-predict(mod1, validation)
+confusionMatrix(validationTest, validation$dataTraining.classe)
+</pre>
+</div>
+</div>
+</span></pre>
+</div>
+</pre>
+<pre style="background-color: #eeeeee; border: 1px dashed rgb(153, 153, 153); overflow: auto; padding: 5px; width: 100%;">So, we get on test set following results that shows accuracy of&nbsp;<b>0.9876</b>, which is quite good result&nbsp;:</pre>
+</div>
+</div>
+<br />
+<b>Confusion Matrix and Statistics</b><br />
+<b><br /></b>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Reference<br />
+Prediction &nbsp; &nbsp;A &nbsp; &nbsp;B &nbsp; &nbsp;C &nbsp; &nbsp;D &nbsp; &nbsp;E<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;A 1670 &nbsp; 19 &nbsp; &nbsp;0 &nbsp; &nbsp;0 &nbsp; &nbsp;0<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;B &nbsp; &nbsp;4 1108 &nbsp; 17 &nbsp; &nbsp;0 &nbsp; &nbsp;0<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;C &nbsp; &nbsp;0 &nbsp; 12 1007 &nbsp; 16 &nbsp; &nbsp;0<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;D &nbsp; &nbsp;0 &nbsp; &nbsp;0 &nbsp; &nbsp;2 &nbsp;947 &nbsp; &nbsp;2<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;E &nbsp; &nbsp;0 &nbsp; &nbsp;0 &nbsp; &nbsp;0 &nbsp; &nbsp;1 1080<br />
+<br />
+Overall Statistics<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Accuracy : 0.9876 &nbsp; &nbsp; &nbsp; &nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;95% CI : (0.9844, 0.9903)<br />
+&nbsp; &nbsp; No Information Rate : 0.2845 &nbsp; &nbsp; &nbsp; &nbsp; <br />
+&nbsp; &nbsp; P-Value [Acc &gt; NIR] : &lt; 2.2e-16 &nbsp; &nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Kappa : 0.9843 &nbsp; &nbsp; &nbsp; &nbsp; <br />
+&nbsp;Mcnemar's Test P-Value : NA &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <br />
+<br />
+Statistics by Class:<br />
+<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Class: A Class: B Class: C Class: D Class: E<br />
+Sensitivity &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;0.9976 &nbsp; 0.9728 &nbsp; 0.9815 &nbsp; 0.9824 &nbsp; 0.9982<br />
+Specificity &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;0.9955 &nbsp; 0.9956 &nbsp; 0.9942 &nbsp; 0.9992 &nbsp; 0.9998<br />
+Pos Pred Value &nbsp; &nbsp; &nbsp; &nbsp; 0.9888 &nbsp; 0.9814 &nbsp; 0.9729 &nbsp; 0.9958 &nbsp; 0.9991<br />
+Neg Pred Value &nbsp; &nbsp; &nbsp; &nbsp; 0.9990 &nbsp; 0.9935 &nbsp; 0.9961 &nbsp; 0.9966 &nbsp; 0.9996<br />
+Prevalence &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 0.2845 &nbsp; 0.1935 &nbsp; 0.1743 &nbsp; 0.1638 &nbsp; 0.1839<br />
+Detection Rate &nbsp; &nbsp; &nbsp; &nbsp; 0.2838 &nbsp; 0.1883 &nbsp; 0.1711 &nbsp; 0.1609 &nbsp; 0.1835<br />
+Detection Prevalence &nbsp; 0.2870 &nbsp; 0.1918 &nbsp; 0.1759 &nbsp; 0.1616 &nbsp; 0.1837<br />
+Balanced Accuracy &nbsp; &nbsp; &nbsp;0.9965 &nbsp; 0.9842 &nbsp; 0.9879 &nbsp; 0.9908 &nbsp; 0.9990<br />
+<br />
+<b>Just to compare, lets try GBM model:</b><br />
+<b><br /></b>
+<br />
+<pre style="background-color: #eeeeee; border: 1px dashed #999999; color: black; font-family: Andale Mono, Lucida Console, Monaco, fixed, monospace; font-size: 12px; line-height: 14px; overflow: auto; padding: 5px; width: 100%;"><code>gbmFit1 &lt;- train(dataTraining.classe~., data = training, method = "gbm", verbose = FALSE)<pre style="background-color: #eeeeee; border: 1px dashed rgb(153, 153, 153); overflow: auto; padding: 5px; width: 100%;"><span style="line-height: 14px;"><div dir="ltr" style="font-family: 'Times New Roman'; font-size: medium; line-height: normal; white-space: normal;" trbidi="on">
+<div dir="ltr" trbidi="on">
+<pre style="background-color: #eeeeee; border: 1px dashed rgb(153, 153, 153); overflow: auto; padding: 5px; width: 100%;">predTrain&lt;-predict(<span style="font-family: 'Andale Mono', 'Lucida Console', Monaco, fixed, monospace; font-size: 12px; line-height: 14px; white-space: normal;">gbmFit1</span><span style="font-family: 'Times New Roman'; white-space: normal;">, training)</span>
+predTest&lt;-predict(<span style="font-family: 'Andale Mono', 'Lucida Console', Monaco, fixed, monospace; font-size: 12px; line-height: 14px; white-space: normal;">gbmFit1</span><span style="font-family: 'Times New Roman'; white-space: normal;">, test)</span>
+confusionMatrix(predTest, test$dataTraining.classe)
+
+validationTest&lt;-predict(<span style="font-family: 'Andale Mono', 'Lucida Console', Monaco, fixed, monospace; font-size: 12px; line-height: 14px; white-space: normal;">gbmFit1</span><span style="font-family: 'Times New Roman'; white-space: normal;">, validation)</span>
+confusionMatrix(validationTest, validation$dataTraining.classe)</pre>
+</div>
+</div>
+</span></pre>
+</code></pre>
+<div>
+<b><br /></b>
+<b>Confusion Matrix and Statistics</b></div>
+<div>
+<b><br /></b></div>
+<div>
+<div>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Reference</div>
+<div>
+Prediction &nbsp; &nbsp;A &nbsp; &nbsp;B &nbsp; &nbsp;C &nbsp; &nbsp;D &nbsp; &nbsp;E</div>
+<div>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;A 1155 &nbsp; 27 &nbsp; &nbsp;0 &nbsp; &nbsp;0 &nbsp; &nbsp;3</div>
+<div>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;B &nbsp; &nbsp;9 &nbsp;698 &nbsp; 35 &nbsp; &nbsp;8 &nbsp; &nbsp;9</div>
+<div>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;C &nbsp; &nbsp;4 &nbsp; 63 &nbsp;659 &nbsp; 27 &nbsp; &nbsp;9</div>
+<div>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;D &nbsp; &nbsp;2 &nbsp; &nbsp;8 &nbsp; 21 &nbsp;638 &nbsp; 21</div>
+<div>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;E &nbsp; &nbsp;1 &nbsp; &nbsp;1 &nbsp; &nbsp;3 &nbsp; &nbsp;2 &nbsp;715</div>
+<div>
+<br /></div>
+<div>
+Overall Statistics</div>
+<div>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Accuracy : 0.9386 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</div>
+<div>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;95% CI : (0.9308, 0.9457)</div>
+<div>
+&nbsp; &nbsp; No Information Rate : 0.2844 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</div>
+<div>
+&nbsp; &nbsp; P-Value [Acc &gt; NIR] : &lt; 2.2e-16 &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Kappa : 0.9223 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</div>
+<div>
+&nbsp;Mcnemar's Test P-Value : 2.849e-07 &nbsp; &nbsp; &nbsp;&nbsp;</div>
+<div>
+<br /></div>
+<div>
+Statistics by Class:</div>
+<div>
+<br /></div>
+<div>
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Class: A Class: B Class: C Class: D Class: E</div>
+<div>
+Sensitivity &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;0.9863 &nbsp; 0.8758 &nbsp; 0.9178 &nbsp; 0.9452 &nbsp; 0.9445</div>
+<div>
+Specificity &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;0.9898 &nbsp; 0.9816 &nbsp; 0.9697 &nbsp; 0.9849 &nbsp; 0.9979</div>
+<div>
+Pos Pred Value &nbsp; &nbsp; &nbsp; &nbsp; 0.9747 &nbsp; 0.9196 &nbsp; 0.8648 &nbsp; 0.9246 &nbsp; 0.9903</div>
+<div>
+Neg Pred Value &nbsp; &nbsp; &nbsp; &nbsp; 0.9945 &nbsp; 0.9705 &nbsp; 0.9824 &nbsp; 0.9892 &nbsp; 0.9876</div>
+<div>
+Prevalence &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 0.2844 &nbsp; 0.1935 &nbsp; 0.1744 &nbsp; 0.1639 &nbsp; 0.1838</div>
+<div>
+Detection Rate &nbsp; &nbsp; &nbsp; &nbsp; 0.2805 &nbsp; 0.1695 &nbsp; 0.1600 &nbsp; 0.1549 &nbsp; 0.1736</div>
+<div>
+Detection Prevalence &nbsp; 0.2878 &nbsp; 0.1843 &nbsp; 0.1850 &nbsp; 0.1676 &nbsp; 0.1753</div>
+<div>
+Balanced Accuracy &nbsp; &nbsp; &nbsp;0.9881 &nbsp; 0.9287 &nbsp; 0.9438 &nbsp; 0.9650 &nbsp; 0.9712</div>
+</div>
+<div>
+<div>
+<br /></div>
+</div>
+<div>
+Generalized Boosted Regression Model performs worther than Random Forest, though, gml should be set up properly.&nbsp;</div>
+</div>
+</body>
+</html>
